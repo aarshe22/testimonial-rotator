@@ -69,7 +69,7 @@ Check out this [Help Guide](https://halgatewood.com/docs/plugins/testimonial-rot
 = 3.0.4 - August 16th, 2026 =
 * FIX: Stored XSS in Author Information (`_cite`) for users without `unfiltered_html` (Contributor+)
 * FIX: Stored XSS via `title_heading` and shortcode/widget attributes (`extra_classes`, `fx`, `template`)
-* NEW: Allow-list sanitizers applied on save and output; PHPUnit before/after tests
+* NEW: Allow-list sanitizers applied on save and output
 * NEW: Save nonces and capability checks; rotator CPT caps; settings sanitizers
 
 = 3.0.3 - June 15th, 2020 =
@@ -317,17 +317,3 @@ Fix:
 * The same sanitizers run on rotator save, widget update, shortcode atts, and render
 
 Helpers live in `includes/sanitization.php`.
-
-== Tests ==
-
-PHPUnit records the 3.0.3 failures and asserts the patched helpers block the same payloads. No WordPress database is required.
-
-`composer install`
-
-`vendor/bin/phpunit --testdox`
-
-`vendor/bin/phpunit --group before --testdox`
-
-`vendor/bin/phpunit --group after --testdox`
-
-`--group before` documents that the old sanitizers were unsafe. `--group after` must stay green; if it fails, XSS was reintroduced.

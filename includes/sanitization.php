@@ -1,7 +1,7 @@
 <?php
 
 // Exit if accessed directly
-if ( ! defined( 'ABSPATH' ) && ! defined( 'TESTIMONIAL_ROTATOR_TESTING' ) ) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -45,7 +45,7 @@ function testimonial_rotator_sanitize_cite( $cite ) {
 }
 
 /**
- * Allow-list kses used in unit tests and as a defense-in-depth pass in WordPress.
+ * Extra cite sanitization before wp_kses, as a defense-in-depth pass.
  *
  * @param string $html
  * @return string
