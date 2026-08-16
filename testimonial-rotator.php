@@ -15,6 +15,8 @@ Version: 3.0.3
 if( !defined('TESTIMONIAL_ROTATOR_URI') ) define('TESTIMONIAL_ROTATOR_URI', trailingslashit( plugin_dir_url( __FILE__ )));
 if( !defined('TESTIMONIAL_ROTATOR_DIR') ) define('TESTIMONIAL_ROTATOR_DIR', plugin_dir_path( __FILE__ ));
 
+require_once( TESTIMONIAL_ROTATOR_DIR . 'includes/sanitization.php' );
+
 // SETUP
 add_action( 'plugins_loaded', 'testimonial_rotator_setup' );
 function testimonial_rotator_setup()
@@ -371,6 +373,12 @@ function testimonial_rotator( $atts )
 	if( !trim($title_heading) ) 					$title_heading =  apply_filters('testimonial_rotator_title_heading', 'h2', $template_name, $id);
 	if( !trim($excerpt_length) ) 					$excerpt_length =  apply_filters('testimonial_rotator_excerpt_length', 20, $id);
 
+	$title_heading  = testimonial_rotator_sanitize_heading( $title_heading );
+	$template_name  = testimonial_rotator_sanitize_template( $template_name );
+	$fx             = testimonial_rotator_sanitize_fx( $fx );
+	$extra_classes  = testimonial_rotator_sanitize_extra_classes( $extra_classes );
+	$itemreviewed   = $itemreviewed ? testimonial_rotator_sanitize_plain_text( $itemreviewed ) : $itemreviewed;
+
 
 	// FILTER AVAILABLE FOR PAUSE ON HOVER
 	// ONE PARAMETER PASSED IS THE ID OF THE ROTATOR
@@ -537,7 +545,7 @@ function testimonial_rotator( $atts )
 				}	
 			}
 			
-			$cite = get_post_meta( get_the_ID(), '_cite', true );
+			$cite = testimonial_rotator_sanitize_cite( get_post_meta( get_the_ID(), '_cite', true ) );
 			$rating = (int) get_post_meta( get_the_ID(), '_rating', true );
 			
 			// RATING COUNT

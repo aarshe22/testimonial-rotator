@@ -286,17 +286,17 @@ class TestimonialRotatorWidget extends WP_Widget
 		// OVERRIDES
 		$instance['override_rotator_settings'] 	= (isset($new_instance['override_rotator_settings']) AND $new_instance['override_rotator_settings'] == 1) ? 1 : 0;
 
-		if( isset($new_instance['template']) ) 			$instance['template'] 			= $new_instance['template'];
-		if( isset($new_instance['fx']) ) 				$instance['fx'] 				= $new_instance['fx'];
-		if( isset($new_instance['img_size']) ) 			$instance['img_size'] 			= $new_instance['img_size'];
-		if( isset($new_instance['timeout']) ) 			$instance['timeout'] 			= $new_instance['timeout'];
-		if( isset($new_instance['speed']) ) 			$instance['speed'] 				= $new_instance['speed'];
-		if( isset($new_instance['title_heading']) ) 	$instance['title_heading'] 		= $new_instance['title_heading'];
+		if( isset($new_instance['template']) ) 			$instance['template'] 			= testimonial_rotator_sanitize_template( $new_instance['template'] );
+		if( isset($new_instance['fx']) ) 				$instance['fx'] 				= testimonial_rotator_sanitize_fx( $new_instance['fx'] );
+		if( isset($new_instance['img_size']) ) 			$instance['img_size'] 			= preg_replace( '/[^a-z0-9_\-]/i', '', (string) $new_instance['img_size'] );
+		if( isset($new_instance['timeout']) ) 			$instance['timeout'] 			= absint( $new_instance['timeout'] );
+		if( isset($new_instance['speed']) ) 			$instance['speed'] 				= absint( $new_instance['speed'] );
+		if( isset($new_instance['title_heading']) ) 	$instance['title_heading'] 		= testimonial_rotator_sanitize_heading( $new_instance['title_heading'] );
 		if( isset($new_instance['shuffle']) ) 			$instance['shuffle'] 			= $new_instance['shuffle'];
 		if( isset($new_instance['verticalalign']) ) 	$instance['verticalalign'] 		= $new_instance['verticalalign'];
 		if( isset($new_instance['prev_next']) ) 		$instance['prev_next'] 			= $new_instance['prev_next'];
 		if( isset($new_instance['show_link']) AND $new_instance['show_link'] != '' ) 	$instance['show_link'] 			= $new_instance['show_link'];
-		if( isset($new_instance['itemreviewed']) ) 		$instance['itemreviewed'] 		= $new_instance['itemreviewed'];
+		if( isset($new_instance['itemreviewed']) ) 		$instance['itemreviewed'] 		= testimonial_rotator_sanitize_plain_text( $new_instance['itemreviewed'] );
 		if( isset($new_instance['link_text']) ) 		$instance['link_text'] 			= $new_instance['link_text'];
 
 		if( isset($new_instance['hidefeaturedimage']) ) $instance['hidefeaturedimage'] 	= $new_instance['hidefeaturedimage'];

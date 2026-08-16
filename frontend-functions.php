@@ -25,7 +25,7 @@ function testimonial_rotator_single( $content )
 		
 		$itemreviewed 		= get_post_meta( $rotator_id, '_itemreviewed', true );
 		$img_size 			= get_post_meta( $rotator_id, '_img_size', true );
-		$cite 				= get_post_meta( $testimonial_id, '_cite', true );
+		$cite 				= testimonial_rotator_sanitize_cite( get_post_meta( $testimonial_id, '_cite', true ) );
 		$has_image 			= has_post_thumbnail() ? "has-image" : false;
 		$template_name 		= get_post_meta( $rotator_id, '_template', true );
 		
@@ -38,6 +38,8 @@ function testimonial_rotator_single( $content )
 		// SANITIZE
 		if( !trim($template_name) ) 				$template_name = "default";
 		if( !trim($title_heading) ) 				$title_heading =  apply_filters('testimonial_rotator_title_heading', 'h2', $template_name, $rotator_id);
+		$title_heading = testimonial_rotator_sanitize_heading( $title_heading );
+		$template_name = testimonial_rotator_sanitize_template( $template_name );
 
 		$is_single = true;
 		if( !$template_name ) $template_name = apply_filters('testimonial_rotator_single_page_theme', 'default', $post->ID);

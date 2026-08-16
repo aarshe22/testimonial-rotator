@@ -230,14 +230,14 @@ function testimonial_rotator_save_rotator_meta( $post_id, $post )
     {   
 		
 		// INPUTS
-		if ( isset( $_POST['fx'] ) ) 				{ update_post_meta( $post->ID, '_fx', strip_tags( $_POST['fx'] ) ); }
-		if ( isset( $_POST['timeout'] ) ) 			{ update_post_meta( $post->ID, '_timeout', strip_tags( $_POST['timeout'] ) ); }
-		if ( isset( $_POST['speed'] ) ) 			{ update_post_meta( $post->ID, '_speed', strip_tags( $_POST['speed'] ) ); }
-		if ( isset( $_POST['limit'] ) ) 			{ update_post_meta( $post->ID, '_limit', strip_tags( $_POST['limit'] ) ); }
-		if ( isset( $_POST['itemreviewed'] ) ) 		{ update_post_meta( $post->ID, '_itemreviewed', strip_tags( $_POST['itemreviewed'] ) ); }
-		if ( isset( $_POST['template'] ) ) 			{ update_post_meta( $post->ID, '_template', strip_tags( $_POST['template'] ) ); }
-		if ( isset( $_POST['img_size'] ) ) 			{ update_post_meta( $post->ID, '_img_size', strip_tags( $_POST['img_size'] ) ); }
-		if ( isset( $_POST['title_heading'] ) ) 	{ update_post_meta( $post->ID, '_title_heading', strip_tags( $_POST['title_heading'] ) ); }
+		if ( isset( $_POST['fx'] ) ) 				{ update_post_meta( $post->ID, '_fx', testimonial_rotator_sanitize_fx( $_POST['fx'] ) ); }
+		if ( isset( $_POST['timeout'] ) ) 			{ update_post_meta( $post->ID, '_timeout', absint( $_POST['timeout'] ) ); }
+		if ( isset( $_POST['speed'] ) ) 			{ update_post_meta( $post->ID, '_speed', absint( $_POST['speed'] ) ); }
+		if ( isset( $_POST['limit'] ) ) 			{ update_post_meta( $post->ID, '_limit', absint( $_POST['limit'] ) ); }
+		if ( isset( $_POST['itemreviewed'] ) ) 		{ update_post_meta( $post->ID, '_itemreviewed', testimonial_rotator_sanitize_plain_text( $_POST['itemreviewed'] ) ); }
+		if ( isset( $_POST['template'] ) ) 			{ update_post_meta( $post->ID, '_template', testimonial_rotator_sanitize_template( $_POST['template'] ) ); }
+		if ( isset( $_POST['img_size'] ) ) 			{ update_post_meta( $post->ID, '_img_size', preg_replace( '/[^a-z0-9_\-]/i', '', (string) $_POST['img_size'] ) ); }
+		if ( isset( $_POST['title_heading'] ) ) 	{ update_post_meta( $post->ID, '_title_heading', testimonial_rotator_sanitize_heading( $_POST['title_heading'] ) ); }
 
 
 		// CHECKBOXES

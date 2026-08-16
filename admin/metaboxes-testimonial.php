@@ -102,7 +102,7 @@ function testimonial_rotator_save_testimonial_meta( $post_id, $post )
 		
 		if ( isset( $_POST['cite'] ) ) 			
 		{ 
-			update_post_meta( $post_id, '_cite', wp_kses($_POST['cite'], wp_kses_allowed_html()) ); 
+			update_post_meta( $post_id, '_cite', testimonial_rotator_sanitize_cite( $_POST['cite'] ) ); 
 		}
 		
 	}

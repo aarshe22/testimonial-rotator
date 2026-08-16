@@ -85,7 +85,7 @@ function testimonial_rotator_add_columns( $column, $post_id )
 	else if ( $column == 'image' ) 			echo '<a href="' . $edit_link . '">' . get_the_post_thumbnail( $post_id, array( 50, 50 ) ) . '</a>';
 	else if ( $column == 'order' ) 			echo '<a href="' . $edit_link . '">' . $this_testimonial->menu_order . '</a>';
 	else if ( $column == 'rating' ) 		echo get_post_meta( $post_id, "_rating", true );
-	else if ( $column == 'author_info' ) 	echo get_post_meta( $post_id, "_cite", true );
+	else if ( $column == 'author_info' ) 	echo testimonial_rotator_sanitize_cite( get_post_meta( $post_id, "_cite", true ) );
 	else if ( $column == 'shortcode' ) 	
 	{ 
 		echo '<b>' . __('Display as Single' , 'testimonial-rotator') . '</b><br />'; 
