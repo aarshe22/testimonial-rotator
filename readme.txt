@@ -71,6 +71,11 @@ Check out this [Help Guide](https://halgatewood.com/docs/plugins/testimonial-rot
 
 == Changelog ==
 
+= 3.0.4 - August 16th, 2026 =
+* FIX: Stored XSS in Author Information (`_cite`) for users without `unfiltered_html` (Contributor+)
+* FIX: Stored XSS via `title_heading` and shortcode/widget attributes (`extra_classes`, `fx`, `template`)
+* NEW: Allow-list sanitizers applied on save and output; PHPUnit before/after tests
+
 = 3.0.3 - June 15th, 2020 = 
 * FIX: Security fixes
 
