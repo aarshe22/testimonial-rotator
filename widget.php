@@ -275,20 +275,20 @@ class TestimonialRotatorWidget extends WP_Widget
 	function update($new_instance, $old_instance)
 	{
 		$instance = $old_instance;
-		$instance['title'] 						= $new_instance['title'];
-		$instance['rotator_id'] 				= isset($new_instance['rotator_id']) ? $new_instance['rotator_id'] : '';
-		$instance['format'] 					= $new_instance['format'];
-		$instance['excerpt_length'] 			= $new_instance['excerpt_length'];
+		$instance['title'] 						= sanitize_text_field( $new_instance['title'] );
+		$instance['rotator_id'] 				= isset($new_instance['rotator_id']) ? absint( $new_instance['rotator_id'] ) : 0;
+		$instance['format'] 					= ( isset( $new_instance['format'] ) && $new_instance['format'] === 'list' ) ? 'list' : 'rotator';
+		$instance['excerpt_length'] 			= absint( $new_instance['excerpt_length'] );
 		
-		$instance['show_size'] 					= $new_instance['show_size'];
-		$instance['limit'] 						= $new_instance['limit'];
+		$instance['show_size'] 					= ( isset( $new_instance['show_size'] ) && $new_instance['show_size'] === 'full' ) ? 'full' : 'excerpt';
+		$instance['limit'] 						= absint( $new_instance['limit'] );
 		
 		// OVERRIDES
 		$instance['override_rotator_settings'] 	= (isset($new_instance['override_rotator_settings']) AND $new_instance['override_rotator_settings'] == 1) ? 1 : 0;
 
 		if( isset($new_instance['template']) ) 			$instance['template'] 			= testimonial_rotator_sanitize_template( $new_instance['template'] );
 		if( isset($new_instance['fx']) ) 				$instance['fx'] 				= testimonial_rotator_sanitize_fx( $new_instance['fx'] );
-		if( isset($new_instance['img_size']) ) 			$instance['img_size'] 			= preg_replace( '/[^a-z0-9_\-]/i', '', (string) $new_instance['img_size'] );
+		if( isset($new_instance['img_size']) ) 			$instance['img_size'] 			= testimonial_rotator_sanitize_img_size( $new_instance['img_size'] );
 		if( isset($new_instance['timeout']) ) 			$instance['timeout'] 			= absint( $new_instance['timeout'] );
 		if( isset($new_instance['speed']) ) 			$instance['speed'] 				= absint( $new_instance['speed'] );
 		if( isset($new_instance['title_heading']) ) 	$instance['title_heading'] 		= testimonial_rotator_sanitize_heading( $new_instance['title_heading'] );
@@ -297,14 +297,14 @@ class TestimonialRotatorWidget extends WP_Widget
 		if( isset($new_instance['prev_next']) ) 		$instance['prev_next'] 			= $new_instance['prev_next'];
 		if( isset($new_instance['show_link']) AND $new_instance['show_link'] != '' ) 	$instance['show_link'] 			= $new_instance['show_link'];
 		if( isset($new_instance['itemreviewed']) ) 		$instance['itemreviewed'] 		= testimonial_rotator_sanitize_plain_text( $new_instance['itemreviewed'] );
-		if( isset($new_instance['link_text']) ) 		$instance['link_text'] 			= $new_instance['link_text'];
+		if( isset($new_instance['link_text']) ) 		$instance['link_text'] 			= sanitize_text_field( $new_instance['link_text'] );
 
-		if( isset($new_instance['hidefeaturedimage']) ) $instance['hidefeaturedimage'] 	= $new_instance['hidefeaturedimage'];
-		if( isset($new_instance['hide_microdata']) ) 	$instance['hide_microdata'] 	= $new_instance['hide_microdata'];
-		if( isset($new_instance['hide_title']) ) 		$instance['hide_title'] 	= $new_instance['hide_title'];
-		if( isset($new_instance['hide_stars']) ) 		$instance['hide_stars'] 	= $new_instance['hide_stars'];
-		if( isset($new_instance['hide_body']) ) 		$instance['hide_body'] 		= $new_instance['hide_body'];
-		if( isset($new_instance['hide_author']) ) 		$instance['hide_author'] 	= $new_instance['hide_author'];
+		if( isset($new_instance['hidefeaturedimage']) ) $instance['hidefeaturedimage'] 	= $new_instance['hidefeaturedimage'] ? 1 : 0;
+		if( isset($new_instance['hide_microdata']) ) 	$instance['hide_microdata'] 	= $new_instance['hide_microdata'] ? 1 : 0;
+		if( isset($new_instance['hide_title']) ) 		$instance['hide_title'] 	= $new_instance['hide_title'] ? 1 : 0;
+		if( isset($new_instance['hide_stars']) ) 		$instance['hide_stars'] 	= $new_instance['hide_stars'] ? 1 : 0;
+		if( isset($new_instance['hide_body']) ) 		$instance['hide_body'] 		= $new_instance['hide_body'] ? 1 : 0;
+		if( isset($new_instance['hide_author']) ) 		$instance['hide_author'] 	= $new_instance['hide_author'] ? 1 : 0;
 		
 		return $instance;
 	}

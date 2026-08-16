@@ -25,11 +25,11 @@ function testimonial_rotator_settings_callback()
 
 function testimonial_rotator_settings_init()
 {
-	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-error-handling', 'testimonial_rotator_settings_sanitize' );
-	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-creator-role' );
-	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-hide-fontawesome' );
-	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-archive-slug' );
-	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-custom-css' );
+	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-error-handling', 'testimonial_rotator_sanitize_error_handling' );
+	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-creator-role', 'testimonial_rotator_sanitize_creator_role' );
+	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-hide-fontawesome', 'testimonial_rotator_sanitize_hide_fontawesome' );
+	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-archive-slug', 'testimonial_rotator_sanitize_archive_slug' );
+	register_setting( 'testimonial_rotator_group', 'testimonial-rotator-custom-css', 'testimonial_rotator_sanitize_custom_css' );
 	
 	add_settings_section( 'testimonial_rotator', '', 'testimonial_rotator_empty_function', 'testimonial_rotator' );
 	add_settings_field( 'testimonial-rotator-error-handling', __('Error Handling', 'testimonial-rotator'), 'testimonial_rotator_error_handling_callback', 'testimonial_rotator', 'testimonial_rotator' );
@@ -41,10 +41,42 @@ function testimonial_rotator_settings_init()
 
 function testimonial_rotator_empty_function() { return ''; }
 
-function testimonial_rotator_settings_sanitize( $data = array() )
+function testimonial_rotator_sanitize_error_handling( $value )
 {
+	$allowed = array( 'source', 'display-admin', 'display-all' );
 	add_settings_error( 'testimonial-rotator-error-handling', '', __( 'Settings Updated', 'testimonial-rotator' ), 'updated' );
-	return $data;
+	return in_array( $value, $allowed, true ) ? $value : 'source';
+}
+
+function testimonial_rotator_sanitize_creator_role( $roles )
+{
+	$roles    = is_array( $roles ) ? $roles : array();
+	$editable = array_keys( get_editable_roles() );
+	$clean    = array();
+	foreach ( $roles as $role ) {
+		$role = sanitize_key( $role );
+		if ( $role && 'administrator' !== $role && in_array( $role, $editable, true ) ) {
+			$clean[] = $role;
+		}
+	}
+	delete_option( 'testimonial-rotator-caps-sync' );
+	return $clean;
+}
+
+function testimonial_rotator_sanitize_hide_fontawesome( $value )
+{
+	return $value ? 1 : 0;
+}
+
+function testimonial_rotator_sanitize_archive_slug( $slug )
+{
+	$slug = sanitize_title( $slug );
+	return $slug ? $slug : 'testimonials';
+}
+
+function testimonial_rotator_sanitize_custom_css( $css )
+{
+	return wp_strip_all_tags( (string) $css );
 }
 
 function testimonial_rotator_error_handling_callback()
@@ -71,7 +103,7 @@ function testimonial_rotator_creator_role_callback()
 		$checkd = "";
 		if( in_array( $role_name, $setting ) ) $checkd = " checked='checked' ";
 
-		echo "<div style='padding: 0 10px 10px 0; float: left; '><input type='checkbox' name='testimonial-rotator-creator-role[]' value='{$role_name}' {$checkd} /> " . $role_name . "</div>";
+		echo "<div style='padding: 0 10px 10px 0; float: left; '><input type='checkbox' name='testimonial-rotator-creator-role[]' value='" . esc_attr( $role_name ) . "' {$checkd} /> " . esc_html( $role_name ) . "</div>";
 	}
 	
 	echo "<p style='clear: both;'>";
@@ -97,7 +129,7 @@ function testimonial_rotator_archiveslug_callback()
 	
 	if( $filter_slug )
 	{
-		echo "<em>" . __('Value has already been set in a filter: ', 'testimonial-rotator') . ": <code>" . $filter_slug . "</code></em>";
+		echo "<em>" . esc_html__( 'Value has already been set in a filter: ', 'testimonial-rotator' ) . ": <code>" . esc_html( $filter_slug ) . "</code></em>";
 	}
 	else
 	{
@@ -106,7 +138,7 @@ function testimonial_rotator_archiveslug_callback()
 		
 		echo "<p>";
 		?>
-		<input type="text" name="testimonial-rotator-archive-slug" value="<?php echo $slug; ?>" style='width:300px; max-width: 90%; display: block;'>
+		<input type="text" name="testimonial-rotator-archive-slug" value="<?php echo esc_attr( $slug ); ?>" style='width:300px; max-width: 90%; display: block;'>
 		<?php
 		echo __("This is the slug that will be used for the Testimonials custom post type archive page.", 'testimonial-rotator');
 		echo "</p>";
@@ -121,7 +153,7 @@ function testimonial_rotator_custom_css_setting()
 	$setting = get_option( 'testimonial-rotator-custom-css' );
 	
 	echo "<textarea col=\"20\" name=\"testimonial-rotator-custom-css\" style=\"width: 70%; height: 200px;\">";
-	echo $setting;
+	echo esc_textarea( $setting );
 	echo "</textarea>";
 	echo "<p>" . __("This custom CSS will get inserted after the testimonial rotator CSS is loaded so you can override the styles.", 'testimonial-rotator') . "</p>";
 }

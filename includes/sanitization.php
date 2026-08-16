@@ -146,3 +146,163 @@ function testimonial_rotator_sanitize_template( $template ) {
 function testimonial_rotator_sanitize_plain_text( $text ) {
 	return trim( strip_tags( (string) $text ) );
 }
+
+/**
+ * Image size slug for get_the_post_thumbnail().
+ *
+ * @param mixed $size
+ * @return string
+ */
+function testimonial_rotator_sanitize_img_size( $size ) {
+	$size = preg_replace( '/[^a-z0-9_\-]/i', '', (string) $size );
+	return $size ? $size : 'thumbnail';
+}
+
+/**
+ * Star rating 0–5.
+ *
+ * @param mixed $rating
+ * @return int
+ */
+function testimonial_rotator_sanitize_rating( $rating ) {
+	$rating = (int) $rating;
+	if ( $rating < 0 ) {
+		$rating = 0;
+	}
+	if ( $rating > 5 ) {
+		$rating = 5;
+	}
+	return $rating;
+}
+
+/**
+ * Keep only IDs that belong to the testimonial_rotator post type.
+ *
+ * @param mixed $ids
+ * @return array
+ */
+function testimonial_rotator_sanitize_rotator_ids( $ids ) {
+	$clean = array();
+	foreach ( (array) $ids as $id ) {
+		$id = function_exists( 'absint' ) ? absint( $id ) : abs( (int) $id );
+		if ( ! $id ) {
+			continue;
+		}
+		if ( function_exists( 'get_post_type' ) && 'testimonial_rotator' !== get_post_type( $id ) ) {
+			continue;
+		}
+		$clean[] = $id;
+	}
+	return $clean;
+}
+
+/**
+ * Display-safe cite HTML (kses + wpautop).
+ *
+ * @param mixed $cite
+ * @return string
+ */
+function testimonial_rotator_kses_cite_output( $cite ) {
+	$cite = testimonial_rotator_sanitize_cite( $cite );
+	if ( function_exists( 'wpautop' ) ) {
+		$cite = wpautop( $cite );
+	}
+	if ( function_exists( 'wp_kses' ) ) {
+		return wp_kses( $cite, testimonial_rotator_cite_allowed_html() );
+	}
+	return $cite;
+}
+
+/**
+ * True when this request may persist plugin post meta.
+ *
+ * @param int $post_id
+ * @return bool
+ */
+function testimonial_rotator_can_save_meta( $post_id ) {
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return false;
+	}
+	if ( function_exists( 'wp_is_post_revision' ) && wp_is_post_revision( $post_id ) ) {
+		return false;
+	}
+	if ( function_exists( 'wp_is_post_autosave' ) && wp_is_post_autosave( $post_id ) ) {
+		return false;
+	}
+	if ( empty( $_POST['testimonial_rotator_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['testimonial_rotator_nonce'] ) ), 'testimonial_rotator_save' ) ) {
+		return false;
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Caps granted to Administrators and roles in the creator-role setting.
+ *
+ * @return array
+ */
+function testimonial_rotator_rotator_caps() {
+	return array(
+		'edit_testimonial_rotator',
+		'read_testimonial_rotator',
+		'delete_testimonial_rotator',
+		'edit_testimonial_rotators',
+		'edit_others_testimonial_rotators',
+		'publish_testimonial_rotators',
+		'read_private_testimonial_rotators',
+		'delete_testimonial_rotators',
+		'delete_private_testimonial_rotators',
+		'delete_published_testimonial_rotators',
+		'delete_others_testimonial_rotators',
+		'edit_private_testimonial_rotators',
+		'edit_published_testimonial_rotators',
+		'create_testimonial_rotators',
+	);
+}
+
+/**
+ * Grant or revoke rotator CPT caps so menu hiding matches real access.
+ */
+function testimonial_rotator_sync_rotator_caps() {
+	if ( ! function_exists( 'wp_roles' ) ) {
+		return;
+	}
+
+	$allowed_roles = array( 'administrator' );
+	foreach ( (array) get_option( 'testimonial-rotator-creator-role' ) as $role_name ) {
+		$role_name = sanitize_key( $role_name );
+		if ( $role_name && 'administrator' !== $role_name ) {
+			$allowed_roles[] = $role_name;
+		}
+	}
+
+	$caps = testimonial_rotator_rotator_caps();
+	foreach ( array_keys( wp_roles()->roles ) as $role_name ) {
+		$role = get_role( $role_name );
+		if ( ! $role ) {
+			continue;
+		}
+		$grant = in_array( $role_name, $allowed_roles, true );
+		foreach ( $caps as $cap ) {
+			if ( $grant ) {
+				$role->add_cap( $cap );
+			} else {
+				$role->remove_cap( $cap );
+			}
+		}
+	}
+}
+
+/**
+ * Sync rotator caps when the creator-role option changes.
+ */
+function testimonial_rotator_maybe_sync_rotator_caps() {
+	$hash = md5( wp_json_encode( get_option( 'testimonial-rotator-creator-role' ) ) . '3.0.4' );
+	if ( get_option( 'testimonial-rotator-caps-sync' ) === $hash ) {
+		return;
+	}
+	testimonial_rotator_sync_rotator_caps();
+	update_option( 'testimonial-rotator-caps-sync', $hash, false );
+}

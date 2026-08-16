@@ -253,4 +253,22 @@ class SanitizationBeforeAfterTest extends TestCase {
 		$this->assertSame( 'longform', testimonial_rotator_sanitize_template( 'longform' ) );
 		$this->assertSame( 'default', testimonial_rotator_sanitize_template( 'default";alert(1)' ) );
 	}
+
+	/**
+	 * @group after
+	 */
+	public function test_after_patch_rating_is_clamped() {
+		$this->assertSame( 0, testimonial_rotator_sanitize_rating( -3 ) );
+		$this->assertSame( 5, testimonial_rotator_sanitize_rating( 99 ) );
+		$this->assertSame( 3, testimonial_rotator_sanitize_rating( '3<script>' ) );
+	}
+
+	/**
+	 * @group after
+	 */
+	public function test_after_patch_cite_output_helper_strips_script() {
+		$html = testimonial_rotator_kses_cite_output( '<script>alert(1)</script><strong>Jane</strong>' );
+		$this->assertStringNotContainsString( '<script>', $html );
+		$this->assertStringContainsString( 'Jane', $html );
+	}
 }

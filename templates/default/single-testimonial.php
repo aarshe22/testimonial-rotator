@@ -38,7 +38,7 @@ if( $show_body )
 if( $cite AND $show_author )
 {
 	echo "<div class=\"testimonial_rotator_author_info cf-tr\">\n";
-	echo wpautop($cite);
+	echo testimonial_rotator_kses_cite_output( $cite );
 	echo "</div>\n";				
 }
 
@@ -50,12 +50,12 @@ if( $show_microdata )
 	if( !$itemreviewed ) $itemreviewed = get_bloginfo('name');
 	
 	echo "	<div class=\"testimonial_rotator_microdata\">\n";
-		if($itemreviewed) echo "\t<div class=\"item\"><div class=\"fn\">{$itemreviewed}</div></div>\n";
+		if($itemreviewed) echo "\t<div class=\"item\"><div class=\"fn\">" . esc_html( $itemreviewed ) . "</div></div>\n";
 		if($rating) echo "\t<div class=\"rating\">{$rating}</div>\n";
 
 		echo "	<div class=\"dtreviewed\"> " . get_the_date('c') . "</div>";
 		echo "	<div class=\"reviewer\"> ";
-			echo "	<div class=\"fn\"> " . wpautop($cite) . "</div>";
+			echo "	<div class=\"fn\"> " . testimonial_rotator_kses_cite_output( $cite ) . "</div>";
 			if ( has_post_thumbnail() ) { echo get_the_post_thumbnail( get_the_ID(), 'thumbnail', array('class' => 'photo' )); }
 		echo "	</div>";
 		echo "	<div class=\"summary\"> " . testimonial_rotator_excerpt(apply_filters('testimonial_rotator_microdata_summary_length', 300)) . "</div>";

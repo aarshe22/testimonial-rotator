@@ -154,7 +154,7 @@ function testimonial_rotator_init()
 					'hierarchical' 			=> false,
 					'menu_position' 		=> apply_filters( 'testimonial_rotator_menu_position', 26.6 ),
 					'exclude_from_search' 	=> true,
-					'supports' 				=> apply_filters( 'testimonial_rotator_testimonial_supports', array( 'title', 'editor', 'excerpt', 'thumbnail', 'page-attributes', 'custom-fields' ) )
+					'supports' 				=> apply_filters( 'testimonial_rotator_testimonial_supports', array( 'title', 'editor', 'excerpt', 'thumbnail', 'page-attributes' ) )
 					);
 
 	register_post_type( 'testimonial', apply_filters( 'testimonial_rotator_pt_args', $args ) );
@@ -184,16 +184,18 @@ function testimonial_rotator_init()
 					'show_in_menu' 			=> false,
 					'query_var' 			=> true,
 					'rewrite' 				=> array( 'with_front' => false ),
-					'capability_type' 		=> 'post',
+					'capability_type' 		=> 'testimonial_rotator',
+					'map_meta_cap' 			=> true,
 					'has_archive' 			=> false,
 					'hierarchical' 			=> false,
 					'menu_position' 		=> apply_filters( "testimonial_rotator_menu_position", 26.6) + .1,
 					'exclude_from_search' 	=> true,
-					'supports' 				=> apply_filters( "testimonial_rotator_supports", array( 'title', 'custom-fields' ) ),
+					'supports' 				=> apply_filters( "testimonial_rotator_supports", array( 'title' ) ),
 					'show_in_menu'  		=> 'edit.php?post_type=testimonial',
 					);
 					
 	register_post_type( 'testimonial_rotator', apply_filters( 'testimonial_rotator_pt_rotator_args', $args )  );
+	testimonial_rotator_maybe_sync_rotator_caps();
 }
 
 
@@ -378,6 +380,12 @@ function testimonial_rotator( $atts )
 	$fx             = testimonial_rotator_sanitize_fx( $fx );
 	$extra_classes  = testimonial_rotator_sanitize_extra_classes( $extra_classes );
 	$itemreviewed   = $itemreviewed ? testimonial_rotator_sanitize_plain_text( $itemreviewed ) : $itemreviewed;
+	$img_size       = testimonial_rotator_sanitize_img_size( $img_size );
+	$format         = ( $format === 'list' ) ? 'list' : 'rotator';
+	$pause_on_hover = ( $pause_on_hover === 'false' ) ? 'false' : 'true';
+	$log            = ( $log === 'true' ) ? 'true' : 'false';
+	$auto_height    = preg_match( '/^(calc|container|[0-9]+)$/', (string) $auto_height ) ? $auto_height : 'calc';
+	$div_selector   = preg_replace( '/[^a-zA-Z0-9\s\.>#:_-]/', '', (string) $div_selector );
 
 
 	// FILTER AVAILABLE FOR PAUSE ON HOVER
@@ -427,6 +435,7 @@ function testimonial_rotator( $atts )
 	$cycle_class 						.= " format-{$format}";
 	$cycle_class 						.= " template-{$template_name}";
 	$extra_wrap_class 					= apply_filters( 'testimonial_rotator_extra_wrap_class', '', $template_name, $id );
+	$extra_wrap_class 					= testimonial_rotator_sanitize_extra_classes( $extra_wrap_class );
 	if( $is_single )					$cycle_class .= " testimonial-rotator-single ";
 	
 	
@@ -439,7 +448,7 @@ function testimonial_rotator( $atts )
 
 
 	// FX FILTER
-	$fx = apply_filters( 'testimonial_rotator_fx', $fx, $template_name, $id );
+	$fx = testimonial_rotator_sanitize_fx( apply_filters( 'testimonial_rotator_fx', $fx, $template_name, $id ) );
 	
 
 	// PREV/NEXT BUTTON
@@ -485,8 +494,8 @@ function testimonial_rotator( $atts )
 			if( $show_microdata ) $cycle_class .= ' hreview-aggregate ';
 		}
 		
-		echo "<div id=\"testimonial_rotator{$rotator_class_prefix}_wrap_{$id}\" class=\"testimonial_rotator{$rotator_class_prefix}_wrap{$extra_wrap_class}\">\n";
-		echo "	<div id=\"testimonial_rotator{$rotator_class_prefix}_{$id}\" class=\"testimonial_rotator {$rotator_class_prefix}{$cycle_class}\" data-cycletwo-timeout=\"{$timeout}\" data-cycletwo-speed=\"{$speed}\" data-cycletwo-pause-on-hover=\"{$pause_on_hover}\" {$centered} data-cycletwo-swipe=\"{$touch_swipe}\" data-cycletwo-fx=\"{$fx}\" data-cycletwo-auto-height=\"{$auto_height}\" {$prevnextdata}data-cycletwo-slides=\"{$div_selector}\" data-cycletwo-log=\"{$log}\" {$extra_data_attributes}>\n";
+		echo "<div id=\"" . esc_attr( "testimonial_rotator{$rotator_class_prefix}_wrap_{$id}" ) . "\" class=\"" . esc_attr( "testimonial_rotator{$rotator_class_prefix}_wrap{$extra_wrap_class}" ) . "\">\n";
+		echo "	<div id=\"" . esc_attr( "testimonial_rotator{$rotator_class_prefix}_{$id}" ) . "\" class=\"" . esc_attr( "testimonial_rotator {$rotator_class_prefix}{$cycle_class}" ) . "\" data-cycletwo-timeout=\"" . esc_attr( $timeout ) . "\" data-cycletwo-speed=\"" . esc_attr( $speed ) . "\" data-cycletwo-pause-on-hover=\"" . esc_attr( $pause_on_hover ) . "\" {$centered} data-cycletwo-swipe=\"" . esc_attr( $touch_swipe ) . "\" data-cycletwo-fx=\"" . esc_attr( $fx ) . "\" data-cycletwo-auto-height=\"" . esc_attr( $auto_height ) . "\" {$prevnextdata}data-cycletwo-slides=\"" . esc_attr( $div_selector ) . "\" data-cycletwo-log=\"" . esc_attr( $log ) . "\" {$extra_data_attributes}>\n";
 
 		do_action( 'testimonial_rotator_slides_before' );
 		
@@ -537,11 +546,11 @@ function testimonial_rotator( $atts )
 				$itemreviewed_meta = get_post_meta( $id, '_itemreviewed', true );
 				if( $itemreviewed_meta )
 				{
-					$itemreviewed = $itemreviewed_meta;
+					$itemreviewed = testimonial_rotator_sanitize_plain_text( $itemreviewed_meta );
 				}
 				else
 				{
-					$itemreviewed = get_bloginfo('name');
+					$itemreviewed = testimonial_rotator_sanitize_plain_text( get_bloginfo('name') );
 				}	
 			}
 			
@@ -566,7 +575,7 @@ function testimonial_rotator( $atts )
 			echo "<div class=\"testimonial_rotator_microdata\">\n";
 			echo "\t<div class=\"rating\">" . testimonial_rotator_rating($id, 'rating') . "</div>\n";
 			echo "\t<div class=\"count\">{$rating_count}</div>\n";
-			echo "\t<div class=\"item\"><div class=\"fn\">{$itemreviewed}</div></div>\n";
+			echo "\t<div class=\"item\"><div class=\"fn\">" . esc_html( $itemreviewed ) . "</div></div>\n";
 			echo "</div>\n";
 		}
 

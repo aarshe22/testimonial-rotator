@@ -77,19 +77,22 @@ function testimonial_rotator_add_columns( $column, $post_id )
 	$rotator_ids = testimonial_rotator_break_piped_string( get_post_meta( $post_id, "_rotator_id", true ) );
 	
 	$rotator_title_array = array();
-	foreach($rotator_ids as $rotator_id) { $rotator_title_array[] = "<a href='post.php?action=edit&post=" . $rotator_id . "'>" . get_the_title( $rotator_id ) . "</a>"; }
+	foreach($rotator_ids as $rotator_id) {
+		$rotator_id = absint( $rotator_id );
+		$rotator_title_array[] = "<a href='" . esc_url( get_edit_post_link( $rotator_id ) ) . "'>" . esc_html( get_the_title( $rotator_id ) ) . "</a>";
+	}
 
 	$this_testimonial = get_post($post_id);
 
 	if ( $column == 'ID' ) 					echo implode(", ", $rotator_title_array);
-	else if ( $column == 'image' ) 			echo '<a href="' . $edit_link . '">' . get_the_post_thumbnail( $post_id, array( 50, 50 ) ) . '</a>';
-	else if ( $column == 'order' ) 			echo '<a href="' . $edit_link . '">' . $this_testimonial->menu_order . '</a>';
-	else if ( $column == 'rating' ) 		echo get_post_meta( $post_id, "_rating", true );
-	else if ( $column == 'author_info' ) 	echo testimonial_rotator_sanitize_cite( get_post_meta( $post_id, "_cite", true ) );
+	else if ( $column == 'image' ) 			echo '<a href="' . esc_url( $edit_link ) . '">' . get_the_post_thumbnail( $post_id, array( 50, 50 ) ) . '</a>';
+	else if ( $column == 'order' ) 			echo '<a href="' . esc_url( $edit_link ) . '">' . (int) $this_testimonial->menu_order . '</a>';
+	else if ( $column == 'rating' ) 		echo (int) get_post_meta( $post_id, "_rating", true );
+	else if ( $column == 'author_info' ) 	echo testimonial_rotator_kses_cite_output( get_post_meta( $post_id, "_cite", true ) );
 	else if ( $column == 'shortcode' ) 	
 	{ 
-		echo '<b>' . __('Display as Single' , 'testimonial-rotator') . '</b><br />'; 
-		echo '[testimonial_single id="' . $post_id . '"]';
+		echo '<b>' . esc_html__( 'Display as Single' , 'testimonial-rotator' ) . '</b><br />'; 
+		echo '[testimonial_single id="' . (int) $post_id . '"]';
 	}
 }
 
@@ -112,18 +115,17 @@ function testimonial_rotator_rotator_add_columns( $column, $post_id )
 {
 	if ( $column == 'shortcode' )  	
 	{ 	echo '
-			<b>' . __('Use Rotator Settings' , 'testimonial-rotator') . '</b><br />
-			[testimonial_rotator id=' . $post_id . ']<br /><br />
+			<b>' . esc_html__( 'Use Rotator Settings' , 'testimonial-rotator' ) . '</b><br />
+			[testimonial_rotator id=' . (int) $post_id . ']<br /><br />
 			
-			<b>' . __('Display as List' , 'testimonial-rotator') . '</b><br />
-			[testimonial_rotator id=' . $post_id . ' format=list]
+			<b>' . esc_html__( 'Display as List' , 'testimonial-rotator' ) . '</b><br />
+			[testimonial_rotator id=' . (int) $post_id . ' format=list]
 		'; 
 	}	
 	else if ( $column == 'theme' )  
 	{
-		$theme = get_post_meta( $post_id, '_template', true );
-		if(!$theme) $theme = "default";
-		echo ucwords($theme);
+		$theme = testimonial_rotator_sanitize_template( get_post_meta( $post_id, '_template', true ) );
+		echo esc_html( ucwords( $theme ) );
 	}
 	else if ( $column == 'aggregate' )  
 	{
@@ -150,7 +152,7 @@ function testimonial_rotator_rotator_add_columns( $column, $post_id )
 		}
 		else
 		{
-			echo "<a href=\"edit.php?post_type=testimonial&rotator_id=" . $post_id . "\">" .  number_format($count_query->found_posts) . "</a>";	
+			echo "<a href=\"" . esc_url( admin_url( 'edit.php?post_type=testimonial&rotator_id=' . (int) $post_id ) ) . "\">" .  esc_html( number_format( $count_query->found_posts ) ) . "</a>";	
 		}
 		wp_reset_postdata();
 	}							
@@ -183,34 +185,15 @@ function testimonial_rotator_parse_testimonials_by_rotator_id( $query )
 /* ROTATOR SUBMENU PAGE */
 function register_testimonial_rotator_submenu_page()
 {
-	global $current_user;
-	
-	// ABILITY TO EDIT ROTATORS FOR ADMINS
-	add_submenu_page( 'edit.php?post_type=testimonial', __('Add Rotator', 'testimonial-rotator'), __('Add Rotator', 'testimonial-rotator'), 'manage_options', 'post-new.php?post_type=testimonial_rotator' ); 
+	add_submenu_page( 'edit.php?post_type=testimonial', __('Add Rotator', 'testimonial-rotator'), __('Add Rotator', 'testimonial-rotator'), 'create_testimonial_rotators', 'post-new.php?post_type=testimonial_rotator' ); 
 	
 	// SETTINGS PAGE
 	add_submenu_page( 'edit.php?post_type=testimonial', __('Settings', 'testimonial-rotator'), __('Settings', 'testimonial-rotator'), 'manage_options', 'testimonial-rotator', 'testimonial_rotator_settings_callback' );
 	
-	if( !current_user_can('manage_options') )
+	if( !current_user_can('manage_options') && current_user_can( 'edit_testimonial_rotators' ) )
 	{
-		$current_user_roles = (array) $current_user->roles;
-			
-		// ADD THE EDIT ROTATOR PAGE FOR OTHER ROLES THAT ARE SELECTED IN SETTINGS
-		$creator_setting = (array) get_option( 'testimonial-rotator-creator-role' );
-		
-		if( $creator_setting AND $current_user_roles )
-		{
-		
-			foreach( $current_user_roles as $role)
-			{
-				if( in_array( $role, $creator_setting))
-				{
-					add_submenu_page( 'edit.php?post_type=testimonial', __('Rotators', 'testimonial-rotator'), __('Rotators', 'testimonial-rotator'), $role, 'edit.php?post_type=testimonial_rotator' ); 
-					add_submenu_page( 'edit.php?post_type=testimonial', __('Add New', 'testimonial-rotator'), __('Add New', 'testimonial-rotator'), $role, 'post-new.php?post_type=testimonial_rotator' ); 
-					break;
-				}
-			}
-		}
+		add_submenu_page( 'edit.php?post_type=testimonial', __('Rotators', 'testimonial-rotator'), __('Rotators', 'testimonial-rotator'), 'edit_testimonial_rotators', 'edit.php?post_type=testimonial_rotator' ); 
+		add_submenu_page( 'edit.php?post_type=testimonial', __('Add New', 'testimonial-rotator'), __('Add New', 'testimonial-rotator'), 'create_testimonial_rotators', 'post-new.php?post_type=testimonial_rotator' ); 
 	}
 }
 

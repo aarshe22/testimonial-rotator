@@ -10,9 +10,11 @@ function testimonial_rotator_metabox_select()
 	$rotator_ids	= testimonial_rotator_break_piped_string( get_post_meta( $post->ID, '_rotator_id', true ) ); 
 	
 	$rating				= get_post_meta( $post->ID, '_rating', true );
-	$cite				= get_post_meta( $post->ID, '_cite', true );
+	$cite				= testimonial_rotator_sanitize_cite( get_post_meta( $post->ID, '_cite', true ) );
 	
 	$rotators = get_posts( array( 'post_type' => 'testimonial_rotator', 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC' ) );
+
+	wp_nonce_field( 'testimonial_rotator_save', 'testimonial_rotator_nonce' );
 ?>
 
 	<?php if(!count($rotators)) { ?>
@@ -25,7 +27,7 @@ function testimonial_rotator_metabox_select()
 		<?php _e('Attach to Rotator: ', 'testimonial-rotator'); ?> &nbsp;
 
 		<?php foreach($rotators as $rotator) { ?>
-			<input id="testimonial_rotator_id_checkbox_<?php echo $rotator->ID ?>" type="checkbox" name="rotator_id[]" <?php echo in_array($rotator->ID, $rotator_ids) ? " CHECKED" : ""; ?> value="<?php echo $rotator->ID ?>"/> <label for="testimonial_rotator_id_checkbox_<?php echo $rotator->ID ?>"><?php echo $rotator->post_title ?></label> &nbsp; &nbsp;
+			<input id="testimonial_rotator_id_checkbox_<?php echo (int) $rotator->ID ?>" type="checkbox" name="rotator_id[]" <?php echo in_array($rotator->ID, $rotator_ids) ? " CHECKED" : ""; ?> value="<?php echo (int) $rotator->ID ?>"/> <label for="testimonial_rotator_id_checkbox_<?php echo (int) $rotator->ID ?>"><?php echo esc_html( $rotator->post_title ) ?></label> &nbsp; &nbsp;
 		<?php } ?> 
 		</p>
 	<?php } ?>
@@ -73,37 +75,30 @@ add_filter( 'teeny_mce_buttons', 'testimonial_rotator_mce_buttons', 10, 2 );
 /* SAVE TESTIMONIAL META DATA */
 function testimonial_rotator_save_testimonial_meta( $post_id, $post ) 
 {
-	global $post;  
-	if( isset( $_POST ) && isset( $post->ID ) && get_post_type( $post->ID ) == "testimonial" )  
-    {  
-		// SAVE
-		if ( isset( $_POST['rotator_id'] ) ) 
-		{
-			if( is_array($_POST['rotator_id']))
-			{
-				update_post_meta( $post_id, '_rotator_id', testimonial_rotator_make_piped_string($_POST['rotator_id']) );
-			}
-			else
-			{
-				$_POST['rotator_id'] = (int) $_POST['rotator_id'];
-				update_post_meta( $post_id, '_rotator_id', wp_strip_all_tags( $_POST['rotator_id'] ) ); 
-			}
-		}
-		else
-		{
-			update_post_meta( $post_id, '_rotator_id', '' ); 
-		}
-		
-		if ( isset( $_POST['rating'] ) )
-		{ 
-			$_POST['rating'] = (int) $_POST['rating'];
-			update_post_meta( $post_id, '_rating', wp_strip_all_tags( $_POST['rating'] ) ); 
-		}
-		
-		if ( isset( $_POST['cite'] ) ) 			
-		{ 
-			update_post_meta( $post_id, '_cite', testimonial_rotator_sanitize_cite( $_POST['cite'] ) ); 
-		}
-		
+	if ( ! isset( $post->ID ) || get_post_type( $post_id ) !== 'testimonial' ) {
+		return;
+	}
+	if ( ! testimonial_rotator_can_save_meta( $post_id ) ) {
+		return;
+	}
+
+	if ( isset( $_POST['rotator_id'] ) )
+	{
+		$rotator_ids = testimonial_rotator_sanitize_rotator_ids( wp_unslash( $_POST['rotator_id'] ) );
+		update_post_meta( $post_id, '_rotator_id', testimonial_rotator_make_piped_string( $rotator_ids ) );
+	}
+	else
+	{
+		update_post_meta( $post_id, '_rotator_id', '' );
+	}
+
+	if ( isset( $_POST['rating'] ) )
+	{
+		update_post_meta( $post_id, '_rating', testimonial_rotator_sanitize_rating( $_POST['rating'] ) );
+	}
+
+	if ( isset( $_POST['cite'] ) )
+	{
+		update_post_meta( $post_id, '_cite', testimonial_rotator_sanitize_cite( wp_unslash( $_POST['cite'] ) ) );
 	}
 }

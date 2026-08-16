@@ -23,8 +23,8 @@ function testimonial_rotator_single( $content )
 			$rotator_id			= reset($rotator_ids);
 		}
 		
-		$itemreviewed 		= get_post_meta( $rotator_id, '_itemreviewed', true );
-		$img_size 			= get_post_meta( $rotator_id, '_img_size', true );
+		$itemreviewed 		= testimonial_rotator_sanitize_plain_text( get_post_meta( $rotator_id, '_itemreviewed', true ) );
+		$img_size 			= testimonial_rotator_sanitize_img_size( get_post_meta( $rotator_id, '_img_size', true ) );
 		$cite 				= testimonial_rotator_sanitize_cite( get_post_meta( $testimonial_id, '_cite', true ) );
 		$has_image 			= has_post_thumbnail() ? "has-image" : false;
 		$template_name 		= get_post_meta( $rotator_id, '_template', true );
