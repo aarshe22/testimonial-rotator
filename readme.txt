@@ -1,5 +1,5 @@
 === Testimonial Rotator ===
-Contributors: halgatewood,ghuger,richardgabriel
+Contributors: halgatewood,ghuger,richardgabriel,aarshe22
 Donate link: https://halgatewood.com/donate/
 Tags: testimonials, sidebar, shortcode, testimonial, praise, homage, testimony, witness, appreciation, rotator, rotators, for developers
 Requires at least: 5.0
